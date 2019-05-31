@@ -3,7 +3,7 @@
 void Container::Register(int objectId, std::unique_ptr<IObject> pObject)
 {
     std::unique_lock<std::shared_timed_mutex> lock(m_mtx);
-    m_map.emplace(objectId, pObject);
+    m_map.emplace(objectId, pObject.release());
 }
 
 void Container::Unregister(int objectId)
@@ -16,7 +16,16 @@ IObject* Container::Query(int objectId)
 {
     std::shared_lock<std::shared_timed_mutex> lock(m_mtx);
     auto it = m_map.find(objectId);
-    return it->second;
+    return it != m_map.end()? it->second: nullptr;
+}
+
+void Container::for_each(std::function<void(IObject*)> func)
+{
+    std::unique_lock<std::shared_timed_mutex> lock(m_mtx);
+    for (auto& item: m_map)
+    {
+        func(item.second);
+    }
 }
 
 Container::iterator Container::begin()
