@@ -21,8 +21,9 @@ IObject* Container::Query(int objectId)
 
 void Container::for_each(std::function<void(IObject*)> func)
 {
-    std::unique_lock<std::shared_timed_mutex> lock(m_mtx);
-    for (auto& item: m_map)
+    ObjectsMap traverse_map(m_map);
+    std::shared_lock<std::shared_timed_mutex> lock(m_mtx);
+    for (auto& item: traverse_map)
     {
         func(item.second);
     }
