@@ -33,17 +33,22 @@ namespace
 InstallationForm::InstallationForm(QWidget* parent) :
     QMainWindow(parent),
     m_ui(new Ui::InstallationForm),
-    m_observer(new InstallationObserver(this))
+    m_observer(new InstallationObserver)
 {
     m_ui->setupUi(this);
-    connect(m_observer, &InstallationObserver::UpdateProgress, this, &InstallationForm::OnProgress, Qt::QueuedConnection);
+    connect(m_observer.get(), &InstallationObserver::UpdateProgress, this, &InstallationForm::OnProgress, Qt::QueuedConnection);
+}
+
+InstallationForm::~InstallationForm()
+{
+
 }
 
 void InstallationForm::OnStartInstallationClick()
 {
     QThread* work_thread = QThread::create([this]()
     {
-        SampleThreadToTestWith(m_observer);
+        SampleThreadToTestWith(m_observer.get());
     });
 
     connect(work_thread, &QThread::finished, work_thread, &QThread::deleteLater);

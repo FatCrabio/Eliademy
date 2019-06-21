@@ -13,7 +13,7 @@ class InstallationForm : public QMainWindow
 
 public:
     explicit InstallationForm(QWidget* parent = nullptr);
-    virtual ~InstallationForm() = default;
+    virtual ~InstallationForm();
 
     void OnProgress(int percents);
     void OnStartInstallationClick();
@@ -25,7 +25,7 @@ signals:
     void UserHasCancelledOperation();
 
 private:
-    Ui::InstallationForm* m_ui;
-    InstallationObserver* m_observer;
+    std::unique_ptr<Ui::InstallationForm> m_ui;
+    std::unique_ptr<InstallationObserver> m_observer;
 };
 
