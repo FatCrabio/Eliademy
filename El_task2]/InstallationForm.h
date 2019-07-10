@@ -1,5 +1,5 @@
 #pragma once
-#include <QMainWindow>
+#include <QWidget>
 
 namespace Ui {
     class InstallationForm;
@@ -7,7 +7,7 @@ namespace Ui {
 
 class InstallationObserver;
 
-class InstallationForm : public QMainWindow
+class InstallationForm : public QWidget
 {
     Q_OBJECT
 
@@ -25,6 +25,8 @@ signals:
     void UserHasCancelledOperation();
 
 private:
+    std::atomic<bool> m_operationCanceled;
+    std::unique_ptr<QThread> m_processingThread;
     std::unique_ptr<Ui::InstallationForm> m_ui;
     std::unique_ptr<InstallationObserver> m_observer;
 };

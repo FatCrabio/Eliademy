@@ -29,12 +29,14 @@ CONFIG   += precompile_header
 SOURCES += \
         InstallationForm.cpp \
         InstallationObserver.cpp \
+        MainWindow.cpp \
         main.cpp
 
 HEADERS += \
     IInstallationObserver.h \
     InstallationForm.h \
     InstallationObserver.h \
+    MainWindow.h \
     pch.h \
     stable.h
 

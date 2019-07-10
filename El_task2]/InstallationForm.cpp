@@ -11,14 +11,14 @@ namespace
 {
     void CallSomeUglyAPI(int i) // this interface can’t be changed
     {
-        QThread::sleep(2);
+        QThread::sleep(100);
     }
 
-    void SampleThreadToTestWith(IInstallationObserver* pObserver) // this interface can be changed
+    void SampleThreadToTestWith(IInstallationObserver* pObserver, std::atomic<bool>& operationCancelled) // this interface can be changed
     {
         for(int i = 0; i < 10; ++i)
         {
-            if (QThread::currentThread()->isInterruptionRequested())
+            if (operationCancelled)
             {
                 return;
             }
@@ -31,7 +31,9 @@ namespace
 }
 
 InstallationForm::InstallationForm(QWidget* parent) :
-    QMainWindow(parent),
+    QWidget(parent),
+    m_operationCanceled(false),
+    m_processingThread(nullptr),
     m_ui(new Ui::InstallationForm),
     m_observer(new InstallationObserver)
 {
@@ -41,24 +43,27 @@ InstallationForm::InstallationForm(QWidget* parent) :
 
 InstallationForm::~InstallationForm()
 {
-
+    if (m_processingThread)
+    {
+        qDebug() << "Closed";
+        m_processingThread->wait();
+    }
 }
 
 void InstallationForm::OnStartInstallationClick()
 {
-    QThread* work_thread = QThread::create([this]()
+    m_processingThread.reset(QThread::create([this]()
     {
-        SampleThreadToTestWith(m_observer.get());
-    });
+        SampleThreadToTestWith(m_observer.get(), m_operationCanceled);
+    }));
 
-    connect(work_thread, &QThread::finished, work_thread, &QThread::deleteLater);
-    connect(this, &InstallationForm::UserHasCancelledOperation, work_thread, [this, work_thread]
+    connect(this, &InstallationForm::UserHasCancelledOperation, m_processingThread.get(), [this]
     {
+        m_operationCanceled = true;
         this->OnProgress(100);
-        work_thread->requestInterruption();
     }, Qt::DirectConnection);
 
-    work_thread->start();
+    m_processingThread->start();
 }
 
 void InstallationForm::OnProgress(int percents)
@@ -69,5 +74,6 @@ void InstallationForm::OnProgress(int percents)
 void InstallationForm::closeEvent(QCloseEvent* event)
 {
     emit UserHasCancelledOperation();
-    QMainWindow::closeEvent(event);
+
+    QWidget::closeEvent(event);
 }
